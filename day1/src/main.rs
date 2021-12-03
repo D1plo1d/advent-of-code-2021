@@ -1,22 +1,13 @@
+use itertools::Itertools;
+
 fn main() -> eyre::Result<()> {
-    let mut root = std::env::current_exe()?;
+    let root = std::env::current_exe()?.ancestors().skip(3).next().unwrap().to_owned();
 
-    for _ in 0..3 {
-        root.pop();
-    }
-
-    let file = std::fs::read_to_string(dbg!(root.join("input")))?;
-
-    let mut prev_depth = 0;
-    let mut count = 0;
-
-    for line in file.lines().filter(|line| line.len() != 0) {
-        let depth: u32 = line.parse()?;
-        if prev_depth > depth {
-            count += 1;
-        }
-        prev_depth = depth;
-    }
+    let count = std::fs::read_to_string(root.join("input"))?.lines()
+        .filter_map(|line| line.parse::<u32>().ok())
+        .tuple_windows()
+        .filter(|(a, b)| a < b)
+        .count();
 
     println!("The depth increased {} times", count);
 
