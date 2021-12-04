@@ -9,22 +9,28 @@ fn main() -> eyre::Result<()> {
         bit_counts[i] += ((c == '1') as i32) * 2 - 1
     }));
 
-    let find = |criteria: fn(char, i32) -> bool| bit_counts.iter()
-        .enumerate()
-        .fold(input.lines().collect(), |acc: Vec<&str>, (i, count)| {
-            let last = acc.last().unwrap().clone();
-            let vals: Vec<_> = acc.into_iter()
-                .filter(|s| criteria(s.chars().skip(i).next().unwrap(), *count))
+    let find = |criteria: fn(bool, i32) -> bool| {
+        let mut acc: Vec<&str> = input.lines().collect();
+        for (i, count) in bit_counts.iter().enumerate() {
+            let mut last = acc.last().unwrap().clone();
+
+            acc = acc.into_iter()
+                .filter(|s| criteria(s.chars().skip(i).next() == Some('1'), *count))
                 .collect();
 
-            if vals.is_empty() { vec![last] } else { vals }
-        })
-        .pop()
-        .and_then(|s| u64::from_str_radix(s, 2).ok())
-        .unwrap();
+            if acc.len() == 1 {
+                last = acc.first().unwrap();
+            }
 
-    let o2 = find(|c, count| (count >= 0) == (c == '1'));
-    let co2 = find(|c, count| (count >= 0) == (c == '0'));
+            if acc.len() <= 1 {
+                return u64::from_str_radix(last, 2).unwrap()
+            }
+        };
+        panic!("Single value not found, remaining: {:?}", acc);
+    };
+
+    let o2 = find(|b, ones_count| if ones_count >= 0 {b} else {!b});
+    let co2 = find(|b, ones_count| if ones_count >= 0 {!b} else {b});
 
     println!("The life support rating is {}", dbg!(o2) * dbg!(co2));
 
