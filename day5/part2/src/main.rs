@@ -9,35 +9,46 @@ fn main() -> eyre::Result<()> {
     let input = std::fs::read_to_string(root.join("input"))?;
 
     // Parsing
-    let u32_pair = || separated_pair::<_, _, _, _, nom::error::Error<&str>, _, _, _>(
-        nc::u32,
+    let i32_pair = || separated_pair::<_, _, _, _, nom::error::Error<&str>, _, _, _>(
+        nc::i32,
         nb::tag(","),
-        nc::u32,
+        nc::i32,
     );
 
-    let locations: BTreeMap<(u32, u32), u32> = input.lines()
+    let locations: BTreeMap<(i32, i32), i32> = input.lines()
         .map(|line| {
-            separated_pair(u32_pair(), nb::tag(" -> "), u32_pair())(line).unwrap().1
+            let (input, vent) = separated_pair(i32_pair(), nb::tag(" -> "), i32_pair())(line).unwrap();
+            if input.len() > 0 {
+                panic!("Unparsed input: {:?}", input);
+            }
+            vent
         })
         .fold(BTreeMap::new(), |mut locations, vent| {
-            let mut x = vent.0.0.min(vent.1.0);
-            let mut y = vent.0.1.min(vent.1.1);
+            let mut x = vent.0.0;
+            let mut y = vent.0.1;
 
-            let max_x = vent.0.0.max(vent.1.0);
-            let max_y = vent.0.1.max(vent.1.1);
+            let max_x = vent.1.0;
+            let max_y = vent.1.1;
+
+            let x_inc = (max_x - x).signum();
+            let y_inc = (max_y - y).signum();
+            // dbg!((&x, &max_x, &x_inc));
+            // dbg!((&y, &max_y, &y_inc));
 
             loop {
                 *locations.entry((x, y)).or_insert(0) += 1;
+                // dbg!((&x, &max_x, &x_inc));
+                // dbg!((&y, &max_y, &y_inc));
 
                 if x == max_x && y == max_y {
                     break;
                 }
 
-                if x < max_x {
-                    x += 1;
+                if x != max_x {
+                    x += x_inc;
                 }
-                if y < max_y {
-                    y += 1;
+                if y != max_y {
+                    y += y_inc;
                 }
             }
 
