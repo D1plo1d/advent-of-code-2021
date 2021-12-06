@@ -5,7 +5,7 @@ fn main() -> eyre::Result<()> {
 
     let mut bit_counts = [0i32; 12];
 
-    input.lines().for_each(|line| line.char_indices().for_each(|(i, c)| {
+    input.lines().for_each(|line| dbg!(line).char_indices().for_each(|(i, c)| {
         bit_counts[i] += ((c == '1') as i32) * 2 - 1
     }));
 
